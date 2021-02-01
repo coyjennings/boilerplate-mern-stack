@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
+const moment = require('moment');
 
 const userSchema = mongoose.Schema({
     name: {
@@ -38,7 +39,7 @@ userSchema.pre('save', function( next ){
     let user = this;
 
     if (user.isModified('password')) {
-        console.log('user isModified');
+        // console.log('user isModified');
         // password bcrypt
         bcrypt.genSalt(saltRounds, function(err, salt) {
             if (err) {
@@ -55,7 +56,7 @@ userSchema.pre('save', function( next ){
             }
         });
     } else {
-        console.log("same password");
+        // console.log("same password");
         next();
     }
 
@@ -75,7 +76,9 @@ userSchema.methods.generateToken = function(cb) {
     let user = this;
     // generate token with jsonwebtoken
     let token = jwt.sign(user._id.toHexString(), 'secretToken');
+    let oneHour = moment().add(1, 'hour').valueOf();
 
+    user.tokenExp = oneHour;
     user.token = token;
     user.save(function(err, user) {
         if (err) {
